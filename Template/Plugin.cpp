@@ -73,7 +73,10 @@ THook(void*, "?_hitCheck@FishingHook@@IEAA?AVHitResult@@XZ", FishingHook* thi,vo
         auto actor = thi->getOwner();
         if (actor->isPlayer()) {
             auto player = (Player*)actor;
-            thi->retrieve();
+            //thi->retrieve();        //直接调用这个函数的话会出BUG
+            auto item = player->getSelectedItem();
+            item.use(*player);
+
             // 设置标志位 间隔 0.5 - 1 秒后再次抛竿
             if(tickcount > 15)tickcount = 0;
             playerhash[player] = true;

@@ -9,7 +9,7 @@
 #define PLUGIN_INTRODUCTION         "LL版 BDS服务器全自动挂机钓鱼"
 #define PLUGIN_AUTHOR               "CNGEGE"
 #define PLUGIN_VERSION_MAJOR        1
-#define PLUGIN_VERSION_MINOR        0
+#define PLUGIN_VERSION_MINOR        1
 #define PLUGIN_VERSION_REVISION     0
 #define PLUGIN_VERSION_BUILD        0
 #define PLUGIN_VERSION_STATUS       PLUGIN_VERSION_RELEASE
