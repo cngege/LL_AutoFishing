@@ -12,6 +12,7 @@
 #include <LLAPI.h>
 #include <ServerAPI.h>
 #include <MC/FishingHook.hpp>
+//#include <MC/FishingRodItem.hpp>
 
 Logger logger(PLUGIN_NAME);
 
@@ -53,6 +54,24 @@ void PluginInit()
 }
 
 /// <summary>
+/// 概率
+/// </summary>
+/// <param name="probability"></param>
+/// <returns></returns>
+bool Probability(float probability) {
+    srand((unsigned)time(0));
+    auto num = rand() % 101;
+    auto IntProbability = probability * 100;
+    if ((float)num <= IntProbability) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+
+/// <summary>
 /// 获取鱼钩中鱼的咬钩进度
 /// </summary>
 /// <param name="fishingHook">鱼钩单例</param>
@@ -68,21 +87,23 @@ int GetHookedTime(FishingHook* fishingHook) {
 
 
 THook(void*, "?_hitCheck@FishingHook@@IEAA?AVHitResult@@XZ", FishingHook* thi,void* a1) {
+    auto ret = original(thi, a1);
     int HookedTime = GetHookedTime(thi);
     if (fishinghook_offset > 0 && HookedTime > 0) {
         auto actor = thi->getOwner();
         if (actor->isPlayer()) {
             auto player = (Player*)actor;
             //thi->retrieve();        //直接调用这个函数的话会出BUG
-            auto item = player->getSelectedItem();
-            item.use(*player);
+            auto item = player->getHandSlot();
+            item->use(*player);
+            player->refreshInventory();
 
             // 设置标志位 间隔 0.5 - 1 秒后再次抛竿
             if(tickcount > 15)tickcount = 0;
             playerhash[player] = true;
         }
     }
-    return original(thi,a1);
+    return ret;
 }
 
 
