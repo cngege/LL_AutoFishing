@@ -96,6 +96,9 @@ THook(void*, "?_hitCheck@FishingHook@@IEAA?AVHitResult@@XZ", FishingHook* thi,vo
             //thi->retrieve();        //直接调用这个函数的话会出BUG
             auto item = player->getHandSlot();
             item->use(*player);
+            if (thi != nullptr) {
+                thi->remove();
+            }
             player->refreshInventory();
 
             // 设置标志位 间隔 0.5 - 1 秒后再次抛竿
