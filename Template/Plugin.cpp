@@ -102,7 +102,7 @@ THook(void*, "?_hitCheck@FishingHook@@IEAA?AVHitResult@@XZ", FishingHook* thi,vo
             player->refreshInventory();
 
             // 设置标志位 间隔 0.5 - 1 秒后再次抛竿
-            if(tickcount > 15)tickcount = 0;
+            if(tickcount > 10)tickcount = 0;
             playerhash[player] = true;
         }
     }
@@ -120,9 +120,9 @@ THook(void, "?tickWorld@Player@@UEAAXAEBUTick@@@Z", Player* thi, void* tick) {
     else {
         if (playerhash[thi]) {
             //检测手中物品是否是鱼竿
-            auto item = thi->getSelectedItem();
-            if (item.getTypeName() == "minecraft:fishing_rod") {
-                item.use(*thi);
+            ItemStack* item = thi->getHandSlot();
+            if (item->getTypeName() == "minecraft:fishing_rod") {
+                item->use(*thi);
             }
             playerhash[thi] = false;
         }
