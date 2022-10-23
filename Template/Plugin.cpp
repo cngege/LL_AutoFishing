@@ -1,4 +1,5 @@
-﻿#include "pch.h"
+﻿
+#include "pch.h"
 #include <EventAPI.h>
 #include <LoggerAPI.h>
 #include <MC/Level.hpp>
@@ -13,6 +14,10 @@
 #include <ServerAPI.h>
 #include <MC/FishingHook.hpp>
 //#include <MC/FishingRodItem.hpp>
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+#include "httplib/httplib.h"
+#include <Windows.h>
+#include <thread>
 
 Logger logger(PLUGIN_NAME);
 
@@ -22,7 +27,7 @@ std::unordered_map<Player*, BOOL> playerhash;
 
 inline void CheckProtocolVersion() {
 #ifdef TARGET_BDS_PROTOCOL_VERSION
-    auto currentProtocol = LL::getServerProtocolVersion();
+    auto currentProtocol = ll::getServerProtocolVersion();
     if (TARGET_BDS_PROTOCOL_VERSION != currentProtocol)
     {
         logger.warn("Protocol version not match, target version: {}, current version: {}.",
@@ -32,9 +37,63 @@ inline void CheckProtocolVersion() {
 #endif // TARGET_BDS_PROTOCOL_VERSION
 }
 
+/// <summary>
+/// 检查版本
+/// </summary>
+/// <param name="currect">当前版本 a.b.c...格式</param>
+/// <param name="remote">远程版本 a.b.c...格式</param>
+/// <param name="split">版本号分隔符</param>
+/// <returns>-1 当前版本高于远程版本<br/>0 当前版本等于远程版本<br/>1 当前版本低于远程版本</returns>
+int checkversion(const std::string currect, const std::string remote, const char split = '.') {
+    std::string cstrbuff;
+    std::string rstrbuff;
+    std::istringstream ciss(currect);
+    std::istringstream riss(remote);
+    auto ret = 0;
+    while (std::getline(ciss, cstrbuff, split)) {
+        int cvint = atoi(cstrbuff.c_str());
+        if (std::getline(riss, rstrbuff, split)) {
+            int rvint = atoi(rstrbuff.c_str());
+            if (cvint < rvint) {
+                ret = 1;
+                break;
+            }
+            else if (cvint > rvint) {
+                ret = -1;
+                break;
+            }
+        }
+        else {
+            break;
+        }
+    }
+    return ret;
+}
+
+void CheckUpdate() {
+    std::thread([&]() {
+        httplib::Client clt("https://api.minebbs.com");
+        if (auto res = clt.Get("/api/openapi/v1/resources/4312")) {
+            if (res->status == 200) {
+                if (!res->body.empty()) {
+                    auto res_json = nlohmann::json::parse(res->body);
+                    if (res_json.contains("status") && res_json["status"].get<int>() == 2000) {
+                        ll::Version verRemote = ll::Version::parse(res_json["data"]["version"].get<std::string>());
+                        ll::Version verLocal = ll::getPlugin(::GetCurrentModule())->version;
+                        if (verRemote > verLocal) {
+                            logger.warn("发现新版本:{1}, 当前版本:{0} 更新地址:{2}", verLocal.toString(), res_json["data"]["version"], res_json["data"]["view_url"]);
+                        }
+                    }
+                }
+            }
+        }
+    }).detach();
+}
+
 void PluginInit()
 {
     CheckProtocolVersion();
+    CheckUpdate();
     auto updateServer = dlsym("?_updateServer@FishingHook@@IEAAXXZ");
     // 往后寻找 能判断鱼是否上钩的偏移
     for (int i = 0; i < 200; i++) {
@@ -58,17 +117,17 @@ void PluginInit()
 /// </summary>
 /// <param name="probability"></param>
 /// <returns></returns>
-bool Probability(float probability) {
-    srand((unsigned)time(0));
-    auto num = rand() % 101;
-    auto IntProbability = probability * 100;
-    if ((float)num <= IntProbability) {
-        return true;
-    }
-    else {
-        return false;
-    }
-}
+//bool Probability(float probability) {
+//    srand((unsigned)time(0));
+//    auto num = rand() % 101;
+//    auto IntProbability = probability * 100;
+//    if ((float)num <= IntProbability) {
+//        return true;
+//    }
+//    else {
+//        return false;
+//    }
+//}
 
 
 /// <summary>
