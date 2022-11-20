@@ -29,7 +29,7 @@
 // to https://semver.org/ .
 #define PLUGIN_VERSION_MAJOR 1
 #define PLUGIN_VERSION_MINOR 2
-#define PLUGIN_VERSION_REVISION 3
+#define PLUGIN_VERSION_REVISION 4
 #define PLUGIN_VERSION_BUILD 0
 
 // The stage of your plugin, which can be PLUGIN_VERSION_DEV, PLUGIN_VERSION_BETA
