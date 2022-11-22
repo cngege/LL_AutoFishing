@@ -72,21 +72,27 @@ int checkversion(const std::string currect, const std::string remote, const char
 
 void CheckUpdate() {
     std::thread([&]() {
-        httplib::Client clt("https://api.minebbs.com");
-        if (auto res = clt.Get("/api/openapi/v1/resources/4312")) {
-            if (res->status == 200) {
-                if (!res->body.empty()) {
-                    auto res_json = nlohmann::json::parse(res->body);
-                    if (res_json.contains("status") && res_json["status"].get<int>() == 2000) {
-                        ll::Version verRemote = ll::Version::parse(res_json["data"]["version"].get<std::string>());
-                        ll::Version verLocal = ll::getPlugin(::GetCurrentModule())->version;
-                        if (verRemote > verLocal) {
-                            logger.warn("发现新版本:{1}, 当前版本:{0} 更新地址:{2}", verLocal.toString(), res_json["data"]["version"], res_json["data"]["view_url"]);
+        try {
+            httplib::Client clt("https://api.minebbs.com");
+            if (auto res = clt.Get("/api/openapi/v1/resources/4312")) {
+                if (res->status == 200) {
+                    if (!res->body.empty()) {
+                        auto res_json = nlohmann::json::parse(res->body);
+                        if (res_json.contains("status") && res_json["status"].get<int>() == 2000) {
+                            ll::Version verRemote = ll::Version::parse(res_json["data"]["version"].get<std::string>());
+                            ll::Version verLocal = ll::getPlugin(::GetCurrentModule())->version;
+                            if (verRemote > verLocal) {
+                                logger.warn("发现新版本:{1}, 当前版本:{0} 更新地址:{2}", verLocal.toString(), res_json["data"]["version"], res_json["data"]["view_url"]);
+                            }
                         }
                     }
                 }
             }
         }
+        catch (...) {
+
+        }
+
     }).detach();
 }
 
@@ -113,24 +119,6 @@ void PluginInit()
 }
 
 /// <summary>
-/// 概率
-/// </summary>
-/// <param name="probability"></param>
-/// <returns></returns>
-//bool Probability(float probability) {
-//    srand((unsigned)time(0));
-//    auto num = rand() % 101;
-//    auto IntProbability = probability * 100;
-//    if ((float)num <= IntProbability) {
-//        return true;
-//    }
-//    else {
-//        return false;
-//    }
-//}
-
-
-/// <summary>
 /// 获取鱼钩中鱼的咬钩进度
 /// </summary>
 /// <param name="fishingHook">鱼钩单例</param>
@@ -143,7 +131,6 @@ int GetHookedTime(FishingHook* fishingHook) {
         return *reinterpret_cast<int*>((intptr_t)fishingHook + fishinghook_offset);
     }
 }
-
 
 THook(void*, "?_hitCheck@FishingHook@@IEAA?AVHitResult@@XZ", FishingHook* thi,void* a1) {
     auto ret = original(thi, a1);
@@ -167,7 +154,6 @@ THook(void*, "?_hitCheck@FishingHook@@IEAA?AVHitResult@@XZ", FishingHook* thi,vo
     }
     return ret;
 }
-
 
 THook(void, "?tickWorld@Player@@UEAAXAEBUTick@@@Z", Player* thi, void* tick) {
     if (fishinghook_offset <= 0) {
